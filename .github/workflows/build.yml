@@ -1,17 +1,24 @@
+# Name of the workflow, which will be displayed on the "Actions" tab in GitHub
 name: Build BoundCore Plugin
 
+# This tells the workflow to run on every push to the main branch
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
+  # This also allows you to run it manually from the GitHub website
   workflow_dispatch:
 
 jobs:
   build:
+    # Use the latest version of Ubuntu Linux to run the build
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Download your code from the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Set up the correct Java environment (JDK 21)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -19,11 +26,14 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # Step 3: Run the Maven command to compile the code and create the JAR
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
+      # Step 4: Upload the finished JAR file so you can download it
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: BoundCore-Plugin
+          # This path must match the output from Maven
           path: target/boundcore-1.0.0.jar
