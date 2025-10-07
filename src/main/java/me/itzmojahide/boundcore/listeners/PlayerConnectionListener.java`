@@ -1,0 +1,42 @@
+package me.itzmojahide.boundcore.listeners;
+
+import me.itzmojahide.boundcore.BoundCore;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.scheduler.BukkitRunnable;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class PlayerConnectionListener implements Listener {
+    private final BoundCore plugin;
+    public PlayerConnectionListener(BoundCore plugin) { this.plugin = plugin; }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (plugin.getDataManager().hasBound(player)) return;
+
+        String delayStr = plugin.getConfig().getString("join-delay", "5-10");
+        long delayTicks;
+        try {
+            if (delayStr.contains("-")) {
+                String[] parts = delayStr.split("-");
+                delayTicks = ThreadLocalRandom.current().nextInt(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()) + 1) * 20L;
+            } else {
+                delayTicks = Long.parseLong(delayStr.trim()) * 20L;
+            }
+        } catch (NumberFormatException e) {
+            delayTicks = 100L;
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (player.isOnline()) {
+                    plugin.getBoundManager().assignRandomBound(player);
+                }
+            }
+        }.runTaskLater(plugin, delayTicks);
+    }
+            }
