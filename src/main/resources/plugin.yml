@@ -1,0 +1,13 @@
+name: BoundCore
+version: '1.0.0'
+main: me.itzmojahide.boundcore.BoundCore
+api-version: '1.21'
+author: ItzMOJAHIDE
+description: >-
+  Every player gets a Bound — from Normal blessings to Legendary powers.
+  Only OPs can wield the AdminBound. Dual powers per Bound with configurable
+  cooldowns and epic effects.
+permissions:
+  boundcore.admin:
+    description: Allows the potential to receive the AdminBound.
+    default: op
