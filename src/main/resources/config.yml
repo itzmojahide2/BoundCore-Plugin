@@ -1,0 +1,49 @@
+# ------------------------------------------------- #
+#                 BoundCore Settings
+#                  By ItzMOJAHIDE 
+# ------------------------------------------------- #
+# Cooldowns are in seconds.
+# Set 'enabled' to false to disable an ability.
+#
+
+# Delay in seconds before assigning a Bound to a new player.
+# Use a range like '5-10' or a fixed number like '7'.
+join-delay: "5-10"
+
+bounds:
+  NatureBound:
+    left_click: { cooldown: 15, enabled: true }
+    shift_left_click: { cooldown: 20, enabled: true }
+  WindBound:
+    left_click: { cooldown: 10, enabled: true }
+    shift_left_click: { cooldown: 15, enabled: true }
+  StoneBound:
+    left_click: { cooldown: 20, enabled: true }
+    shift_left_click: { cooldown: 25, enabled: true }
+  InfernoBound:
+    left_click: { cooldown: 25, enabled: true }
+    shift_left_click: { cooldown: 30, enabled: true }
+  ThunderBound:
+    left_click: { cooldown: 8, enabled: true }
+    shift_left_click: { cooldown: 20, enabled: true }
+  ShadowBound:
+    left_click: { cooldown: 30, enabled: true }
+    shift_left_click: { cooldown: 25, enabled: true }
+  FrostBound:
+    left_click: { cooldown: 20, enabled: true }
+    shift_left_click: { cooldown: 25, enabled: true }
+  AquaBound:
+    left_click: { cooldown: 20, enabled: true }
+    shift_left_click: { cooldown: 25, enabled: true }
+  DivineBound:
+    left_click: { cooldown: 60, enabled: true }
+    shift_left_click: { cooldown: 90, enabled: true }
+  VoidBound:
+    left_click: { cooldown: 70, enabled: true }
+    shift_left_click: { cooldown: 60, enabled: true }
+  ChronoBound:
+    left_click: { cooldown: 45, enabled: true }
+    shift_left_click: { cooldown: 50, enabled: true }
+  AdminBound:
+    left_click: { cooldown: 90, enabled: true }
+    shift_left_click: { cooldown: 120, enabled: true }
