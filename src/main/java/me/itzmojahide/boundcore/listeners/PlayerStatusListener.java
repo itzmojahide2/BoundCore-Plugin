@@ -28,6 +28,7 @@ public class PlayerStatusListener implements Listener {
         Bound bound = plugin.getDataManager().getPlayerBound(player);
         if (bound == null) return;
 
+        // This is the fixed switch statement
         switch (bound) {
             case WIND:
                 if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
@@ -35,8 +36,6 @@ public class PlayerStatusListener implements Listener {
                 }
                 break;
             case INFERNO:
-                // --- THIS IS THE FIXED SECTION ---
-                // We check for water and drowning damage separately.
                 if (player.isInWater() || event.getCause() == EntityDamageEvent.DamageCause.DROWNING) {
                     event.setDamage(event.getDamage() * 2.0);
                 }
@@ -59,6 +58,9 @@ public class PlayerStatusListener implements Listener {
                     player.removePotionEffect(PotionEffectType.SLOWNESS);
                 }
                 break;
+            // Adding default case to satisfy the compiler
+            default:
+                break;
         }
     }
 
@@ -79,4 +81,4 @@ public class PlayerStatusListener implements Listener {
             }
         }
     }
-        }
+}
