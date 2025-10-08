@@ -33,8 +33,6 @@ public class BoundManager {
         startChronoSaver();
     }
 
-    // --- MAIN LOGIC ---
-
     public void assignRandomBound(Player player) {
         if (plugin.getDataManager().hasBound(player)) return;
         double chance = random.nextDouble();
@@ -90,21 +88,21 @@ public class BoundManager {
             cm.setCooldown(player, cooldownKey, cooldown);
         }
     }
-
+    
     private List<LivingEntity> getNearbyEnemies(Player caster, double radius) {
         return caster.getNearbyEntities(radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !e.equals(caster))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
-
+    
     private List<LivingEntity> getNearbyMobs(Player caster, double radius) {
         return caster.getNearbyEntities(radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !(e instanceof Player))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
-
+    
     private List<Player> getNearbyPlayers(Player caster, double radius) {
         return caster.getWorld().getPlayers().stream()
                 .filter(p -> !p.equals(caster) && p.getLocation().distanceSquared(caster.getLocation()) <= radius * radius)
@@ -401,8 +399,6 @@ public class BoundManager {
         return true;
     }
 
-    // --- MISC UTILITY METHODS ---
-
     public void giveBoundItem(Player player, Bound bound) {
         ItemStack boundItem = new ItemStack(Material.PAPER);
         ItemMeta meta = boundItem.getItemMeta();
@@ -441,7 +437,6 @@ public class BoundManager {
             public void run() {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (plugin.getDataManager().getPlayerBound(p) == Bound.CHRONO) {
-                        // THIS IS THE FIXED LINE
                         chronoLocations.put(p.getUniqueId(), p.getLocation());
                         chronoHealth.put(p.getUniqueId(), p.getHealth());
                     }
@@ -449,4 +444,4 @@ public class BoundManager {
             }
         }.runTaskTimer(plugin, 0L, 5 * 20L);
     }
-                                            }
+    }
