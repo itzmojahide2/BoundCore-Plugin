@@ -94,22 +94,22 @@ public class BoundManager {
 
     // --- CORRECTED HELPER METHODS ---
 
-    private List<LivingEntity> getNearbyEnemies(Location loc, Player caster, double radius) {
-        return loc.getWorld().getNearbyEntities(loc, radius, radius, radius).stream()
+    private List<LivingEntity> getNearbyEnemies(Player caster, double radius) {
+        return caster.getWorld().getNearbyEntities(caster.getLocation(), radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !e.equals(caster))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
 
-    private List<LivingEntity> getNearbyMobs(Location loc, double radius) {
-        return loc.getWorld().getNearbyEntities(loc, radius, radius, radius).stream()
+    private List<LivingEntity> getNearbyMobs(Player caster, double radius) {
+        return caster.getWorld().getNearbyEntities(caster.getLocation(), radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !(e instanceof Player))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
 
-    private List<Player> getNearbyPlayers(Location loc, double radius) {
-        return new ArrayList<>(loc.getWorld().getNearbyPlayers(loc, radius));
+    private List<Player> getNearbyPlayers(Player caster, double radius) {
+        return new ArrayList<>(caster.getWorld().getNearbyPlayers(caster.getLocation(), radius));
     }
 
 
@@ -177,7 +177,7 @@ public class BoundManager {
 
     private boolean doInfernoPrimary(Player p) {
         p.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 20, 0));
-        getNearbyEnemies(p.getLocation(), p, 3.0).forEach(e -> e.setFireTicks(5 * 20));
+        getNearbyEnemies(p, 3.0).forEach(e -> e.setFireTicks(5 * 20));
         p.getWorld().spawnParticle(Particle.FLAME, p.getLocation().add(0, 1, 0), 50, 1, 1, 1, 0.05);
         p.playSound(p.getLocation(), Sound.ITEM_FIRECHARGE_USE, 1.0f, 1.0f);
         p.sendMessage(Component.text("🔥 Flames scorch your foes!", NamedTextColor.RED));
@@ -189,7 +189,7 @@ public class BoundManager {
         p.getWorld().spawnParticle(Particle.LAVA, center.add(0, 1, 0), 100, 2.5, 1, 2.5, 0);
         p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
         p.sendMessage(Component.text("🔥 Fire erupts around you!", NamedTextColor.RED));
-        getNearbyEnemies(center, p, 5.0).forEach(e -> e.damage(6.0, p));
+        getNearbyEnemies(p, 5.0).forEach(e -> e.damage(6.0, p));
         return true;
     }
 
@@ -202,10 +202,9 @@ public class BoundManager {
     }
 
     private boolean doThunderSecondary(Player p) {
-        Location center = p.getLocation();
-        p.getWorld().spawnParticle(Particle.FLASH, center, 1, 0, 0, 0, 0);
-        p.playSound(center, Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 1.5f);
-        getNearbyEnemies(center, p, 5.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
+        p.getWorld().spawnParticle(Particle.FLASH, p.getLocation(), 1, 0, 0, 0, 0);
+        p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 1.5f);
+        getNearbyEnemies(p, 5.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
         p.sendMessage(Component.text("⚡ Lightning erupts around you!", NamedTextColor.YELLOW));
         return true;
     }
@@ -237,7 +236,7 @@ public class BoundManager {
     }
 
     private boolean doFrostPrimary(Player p) {
-        getNearbyMobs(p.getLocation(), 5.0).forEach(e -> {
+        getNearbyMobs(p, 5.0).forEach(e -> {
             e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 4 * 20, 4));
             e.setFreezeTicks(8 * 20);
         });
@@ -289,7 +288,7 @@ public class BoundManager {
         p.getWorld().spawnParticle(Particle.WATER_SPLASH, center.add(0, 1, 0), 100, 1.5, 1, 1.5, 0);
         p.playSound(center, Sound.ENTITY_PLAYER_SPLASH_HIGH_SPEED, 1.0f, 1.0f);
         p.sendMessage(Component.text("💧 Waves push your enemies away!", NamedTextColor.DARK_AQUA));
-        getNearbyEnemies(center, p, 3.0).forEach(e -> {
+        getNearbyEnemies(p, 3.0).forEach(e -> {
             Vector knockback = e.getLocation().toVector().subtract(center.toVector()).normalize().multiply(1.5).setY(0.5);
             e.setVelocity(knockback);
         });
@@ -317,11 +316,10 @@ public class BoundManager {
     }
 
     private boolean doDivineSecondary(Player p) {
-        Location center = p.getLocation();
-        p.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, center, 100, 5, 2, 5, 0);
-        p.playSound(center, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
+        p.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, p.getLocation(), 100, 5, 2, 5, 0);
+        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
         p.sendMessage(Component.text("🩵 The heavens heal all nearby!", NamedTextColor.WHITE));
-        getNearbyPlayers(center, 10.0).forEach(player -> player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 10)));
+        getNearbyPlayers(p, 10.0).forEach(player -> player.setHealth(Math.min(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(), player.getHealth() + 10)));
         return true;
     }
 
@@ -335,7 +333,7 @@ public class BoundManager {
             @Override
             public void run() {
                 if (ticks >= 5 * 20) { this.cancel(); return; }
-                getNearbyEnemies(center, p, 8.0).forEach(e -> {
+                getNearbyEnemies(p, 8.0).forEach(e -> {
                     Vector pull = center.toVector().subtract(e.getLocation().toVector()).normalize().multiply(0.5);
                     e.setVelocity(pull);
                 });
@@ -350,7 +348,7 @@ public class BoundManager {
         p.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, center, 1, 0, 0, 0, 0);
         p.playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 0.8f);
         p.sendMessage(Component.text("🕳️ A force pushes foes away!", NamedTextColor.DARK_GRAY));
-        getNearbyEnemies(center, p, 3.0).forEach(e -> {
+        getNearbyEnemies(p, 3.0).forEach(e -> {
             Vector push = e.getLocation().toVector().subtract(center.toVector()).normalize().multiply(2.0).setY(0.6);
             e.setVelocity(push);
         });
@@ -373,7 +371,7 @@ public class BoundManager {
     }
 
     private boolean doChronoSecondary(Player p) {
-        getNearbyMobs(p.getLocation(), 8.0).forEach(e -> e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 3 * 20, 2)));
+        getNearbyMobs(p, 8.0).forEach(e -> e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 3 * 20, 2)));
         p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, p.getLocation().add(0, 1, 0), 100, 4, 1, 4, 0.1);
         p.playSound(p.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0f, 1.0f);
         p.sendMessage(Component.text("🔮 Time slows for your foes!", NamedTextColor.LIGHT_PURPLE));
@@ -401,11 +399,10 @@ public class BoundManager {
     }
 
     private boolean doAdminSecondary(Player p) {
-        Location center = p.getLocation();
-        p.playSound(center, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
+        p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
         p.sendMessage(Component.text("💠 Lightning bends to your will!", NamedTextColor.GOLD));
-        getNearbyEnemies(center, p, 15.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
-        getNearbyPlayers(center, 15.0).forEach(player -> player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
+        getNearbyEnemies(p, 15.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
+        getNearbyPlayers(p, 15.0).forEach(player -> player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
         return true;
     }
 
@@ -456,4 +453,4 @@ public class BoundManager {
             }
         }.runTaskTimer(plugin, 0L, 5 * 20L);
     }
-        }
+            }
