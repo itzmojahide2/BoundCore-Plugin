@@ -445,4 +445,4 @@ public class BoundManager {
             }
         }.runTaskTimer(plugin, 0L, 5 * 20L);
     }
-                                                                                                                                                                                                                           }
+}
