@@ -91,27 +91,28 @@ public class BoundManager {
             cm.setCooldown(player, cooldownKey, cooldown);
         }
     }
-
+    
     // --- CORRECTED HELPER METHODS ---
-
+    
     private List<LivingEntity> getNearbyEnemies(Player caster, double radius) {
-        return caster.getWorld().getNearbyEntities(caster.getLocation(), radius, radius, radius).stream()
+        return caster.getNearbyEntities(radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !e.equals(caster))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
-
+    
     private List<LivingEntity> getNearbyMobs(Player caster, double radius) {
-        return caster.getWorld().getNearbyEntities(caster.getLocation(), radius, radius, radius).stream()
+        return caster.getNearbyEntities(radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !(e instanceof Player))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
-
+    
     private List<Player> getNearbyPlayers(Player caster, double radius) {
-        return new ArrayList<>(caster.getWorld().getNearbyPlayers(caster.getLocation(), radius));
+        return caster.getWorld().getPlayers().stream()
+                .filter(p -> !p.equals(caster) && p.getLocation().distanceSquared(caster.getLocation()) <= radius * radius)
+                .collect(Collectors.toList());
     }
-
 
     // --- ABILITY IMPLEMENTATIONS (Now using correct helpers) ---
 
@@ -185,8 +186,7 @@ public class BoundManager {
     }
 
     private boolean doInfernoSecondary(Player p) {
-        Location center = p.getLocation();
-        p.getWorld().spawnParticle(Particle.LAVA, center.add(0, 1, 0), 100, 2.5, 1, 2.5, 0);
+        p.getWorld().spawnParticle(Particle.LAVA, p.getLocation().add(0, 1, 0), 100, 2.5, 1, 2.5, 0);
         p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
         p.sendMessage(Component.text("🔥 Fire erupts around you!", NamedTextColor.RED));
         getNearbyEnemies(p, 5.0).forEach(e -> e.damage(6.0, p));
@@ -446,11 +446,11 @@ public class BoundManager {
             public void run() {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (plugin.getDataManager().getPlayerBound(p) == Bound.CHRONO) {
-                        chronoLocations.put(p.getUniqueId(), p.getLocation());
-                        chronoHealth.put(p.getUniqueId(), p.getHealth());
+                        chronoLocations.put(p.getUniqueI(), p.getLocation());
+                        chronoHealth.put(p.getUniqueI(), p.getHealth());
                     }
                 }
             }
         }.runTaskTimer(plugin, 0L, 5 * 20L);
     }
-            }
+        }
