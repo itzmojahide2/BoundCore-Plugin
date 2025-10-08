@@ -4,7 +4,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Project Identification -->
     <groupId>me.itzmojahide</groupId>
     <artifactId>boundcore</artifactId>
     <version>1.0.0</version>
@@ -12,27 +11,22 @@
 
     <name>BoundCore</name>
 
-    <!-- Project Properties -->
     <properties>
-        <!-- This is CRITICAL for 1.21.1 support -->
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!-- Build Configuration -->
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin: Compiles your Java code -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version> <!-- A modern version that supports Java 21 -->
+                <version>3.11.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
-            <!-- Maven Shade Plugin: Packages all dependencies into a single runnable JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -47,7 +41,6 @@
                 </executions>
             </plugin>
         </plugins>
-        <!-- Tells Maven to include files from the resources folder (like plugin.yml) -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -56,7 +49,6 @@
         </resources>
     </build>
 
-    <!-- Repositories: Where Maven looks for dependencies -->
     <repositories>
         <repository>
             <id>papermc-repo</id>
@@ -64,14 +56,12 @@
         </repository>
     </repositories>
 
-    <!-- Dependencies: External libraries your plugin needs to compile -->
     <dependencies>
-        <!-- Paper API for Minecraft 1.21.1 -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.21.1-R0.1-SNAPSHOT</version>
-            <scope>provided</scope> <!-- 'provided' means the server will supply this, so don't package it into the final JAR -->
+            <scope>provided</scope>
         </dependency>
     </dependencies>
-</project>```
+</project>
