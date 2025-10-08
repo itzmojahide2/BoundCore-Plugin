@@ -1,6 +1,5 @@
 package me.itzmojahide.boundcore.managers;
 
-import com.google.common.collect.Lists;
 import me.itzmojahide.boundcore.BoundCore;
 import me.itzmojahide.boundcore.objects.Bound;
 import net.kyori.adventure.text.Component;
@@ -35,6 +34,8 @@ public class BoundManager {
         startChronoSaver();
     }
 
+    // --- MAIN LOGIC ---
+
     public void assignRandomBound(Player player) {
         if (plugin.getDataManager().hasBound(player)) return;
         double chance = random.nextDouble();
@@ -54,33 +55,6 @@ public class BoundManager {
         if (assignedBound.getRarity() == Bound.Rarity.LEGENDARY || assignedBound.getRarity() == Bound.Rarity.ADMIN) {
             Bukkit.broadcast(Component.text("⚠️ ", NamedTextColor.RED).append(Component.text(player.getName(), NamedTextColor.YELLOW)).append(Component.text(" has unlocked a ", NamedTextColor.RED)).append(Component.text("LEGENDARY BOUND: ", NamedTextColor.RED, TextDecoration.BOLD)).append(Component.text(assignedBound.getName() + "!", NamedTextColor.GOLD, TextDecoration.BOLD)));
         }
-    }
-
-    public void giveBoundItem(Player player, Bound bound) {
-        ItemStack boundItem = new ItemStack(Material.PAPER);
-        ItemMeta meta = boundItem.getItemMeta();
-        meta.displayName(Component.text("Your Bound: ", NamedTextColor.GRAY).append(Component.text(bound.getName(), NamedTextColor.GOLD)));
-        meta.lore(List.of(Component.text("This represents your innate power.", NamedTextColor.DARK_AQUA), Component.text("It cannot be dropped or moved.", NamedTextColor.DARK_GRAY)));
-        int modelData;
-        switch (bound) {
-            case NATURE -> modelData = 1001;
-            case WIND -> modelData = 1002;
-            case STONE -> modelData = 1003;
-            case INFERNO -> modelData = 1004;
-            case THUNDER -> modelData = 1005;
-            case SHADOW -> modelData = 1006;
-            case FROST -> modelData = 1007;
-            case AQUA -> modelData = 1008;
-            case DIVINE -> modelData = 1009;
-            case VOID -> modelData = 1010;
-            case CHRONO -> modelData = 1011;
-            case ADMIN -> modelData = 1012;
-            default -> modelData = 0;
-        }
-        meta.setCustomModelData(modelData);
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
-        boundItem.setItemMeta(meta);
-        player.getInventory().setItem(8, boundItem);
     }
 
     public void executeAbility(Player player, boolean isShiftClick) {
@@ -118,9 +92,18 @@ public class BoundManager {
         }
     }
 
-    private List<LivingEntity> getNearbyLivingEntities(Location loc, double radius) {
+    // --- CORRECTED HELPER METHODS ---
+
+    private List<LivingEntity> getNearbyEnemies(Location loc, Player caster, double radius) {
         return loc.getWorld().getNearbyEntities(loc, radius, radius, radius).stream()
-                .filter(e -> e instanceof LivingEntity && !e.equals(loc.getWorld().getPlayers().stream().findFirst().orElse(null)))
+                .filter(e -> e instanceof LivingEntity && !e.equals(caster))
+                .map(e -> (LivingEntity) e)
+                .collect(Collectors.toList());
+    }
+
+    private List<LivingEntity> getNearbyMobs(Location loc, double radius) {
+        return loc.getWorld().getNearbyEntities(loc, radius, radius, radius).stream()
+                .filter(e -> e instanceof LivingEntity && !(e instanceof Player))
                 .map(e -> (LivingEntity) e)
                 .collect(Collectors.toList());
     }
@@ -128,6 +111,9 @@ public class BoundManager {
     private List<Player> getNearbyPlayers(Location loc, double radius) {
         return new ArrayList<>(loc.getWorld().getNearbyPlayers(loc, radius));
     }
+
+
+    // --- ABILITY IMPLEMENTATIONS (Now using correct helpers) ---
 
     private boolean doNaturePrimary(Player p) {
         Block block = p.getLocation().getBlock().getRelative(BlockFace.DOWN);
@@ -191,7 +177,7 @@ public class BoundManager {
 
     private boolean doInfernoPrimary(Player p) {
         p.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 20 * 20, 0));
-        getNearbyLivingEntities(p.getLocation(), 3.0).forEach(e -> e.setFireTicks(5 * 20));
+        getNearbyEnemies(p.getLocation(), p, 3.0).forEach(e -> e.setFireTicks(5 * 20));
         p.getWorld().spawnParticle(Particle.FLAME, p.getLocation().add(0, 1, 0), 50, 1, 1, 1, 0.05);
         p.playSound(p.getLocation(), Sound.ITEM_FIRECHARGE_USE, 1.0f, 1.0f);
         p.sendMessage(Component.text("🔥 Flames scorch your foes!", NamedTextColor.RED));
@@ -203,7 +189,7 @@ public class BoundManager {
         p.getWorld().spawnParticle(Particle.LAVA, center.add(0, 1, 0), 100, 2.5, 1, 2.5, 0);
         p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
         p.sendMessage(Component.text("🔥 Fire erupts around you!", NamedTextColor.RED));
-        getNearbyLivingEntities(center, 5.0).forEach(e -> e.damage(6.0, p));
+        getNearbyEnemies(center, p, 5.0).forEach(e -> e.damage(6.0, p));
         return true;
     }
 
@@ -219,7 +205,7 @@ public class BoundManager {
         Location center = p.getLocation();
         p.getWorld().spawnParticle(Particle.FLASH, center, 1, 0, 0, 0, 0);
         p.playSound(center, Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 1.5f);
-        getNearbyLivingEntities(center, 5.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
+        getNearbyEnemies(center, p, 5.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
         p.sendMessage(Component.text("⚡ Lightning erupts around you!", NamedTextColor.YELLOW));
         return true;
     }
@@ -251,7 +237,7 @@ public class BoundManager {
     }
 
     private boolean doFrostPrimary(Player p) {
-        getNearbyLivingEntities(p.getLocation(), 5.0).forEach(e -> {
+        getNearbyMobs(p.getLocation(), 5.0).forEach(e -> {
             e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 4 * 20, 4));
             e.setFreezeTicks(8 * 20);
         });
@@ -303,7 +289,7 @@ public class BoundManager {
         p.getWorld().spawnParticle(Particle.WATER_SPLASH, center.add(0, 1, 0), 100, 1.5, 1, 1.5, 0);
         p.playSound(center, Sound.ENTITY_PLAYER_SPLASH_HIGH_SPEED, 1.0f, 1.0f);
         p.sendMessage(Component.text("💧 Waves push your enemies away!", NamedTextColor.DARK_AQUA));
-        getNearbyLivingEntities(center, 3.0).forEach(e -> {
+        getNearbyEnemies(center, p, 3.0).forEach(e -> {
             Vector knockback = e.getLocation().toVector().subtract(center.toVector()).normalize().multiply(1.5).setY(0.5);
             e.setVelocity(knockback);
         });
@@ -340,7 +326,7 @@ public class BoundManager {
     }
 
     private boolean doVoidPrimary(Player p) {
-        Location center = p.getLocation().add(p.getLocation().getDirection().multiply(4)).add(0, 1, 0);
+        Location center = p.getEyeLocation().add(p.getLocation().getDirection().multiply(4));
         p.getWorld().spawnParticle(Particle.SQUID_INK, center, 200, 1, 1, 1, 0.1);
         p.playSound(center, Sound.ENTITY_ENDERMAN_STARE, 1.0f, 0.5f);
         p.sendMessage(Component.text("🕳️ Reality bends around you!", NamedTextColor.DARK_GRAY));
@@ -348,11 +334,8 @@ public class BoundManager {
             int ticks = 0;
             @Override
             public void run() {
-                if (ticks >= 5 * 20) {
-                    this.cancel();
-                    return;
-                }
-                getNearbyLivingEntities(center, 8.0).forEach(e -> {
+                if (ticks >= 5 * 20) { this.cancel(); return; }
+                getNearbyEnemies(center, p, 8.0).forEach(e -> {
                     Vector pull = center.toVector().subtract(e.getLocation().toVector()).normalize().multiply(0.5);
                     e.setVelocity(pull);
                 });
@@ -367,7 +350,7 @@ public class BoundManager {
         p.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, center, 1, 0, 0, 0, 0);
         p.playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 0.8f);
         p.sendMessage(Component.text("🕳️ A force pushes foes away!", NamedTextColor.DARK_GRAY));
-        getNearbyLivingEntities(center, 3.0).forEach(e -> {
+        getNearbyEnemies(center, p, 3.0).forEach(e -> {
             Vector push = e.getLocation().toVector().subtract(center.toVector()).normalize().multiply(2.0).setY(0.6);
             e.setVelocity(push);
         });
@@ -390,7 +373,7 @@ public class BoundManager {
     }
 
     private boolean doChronoSecondary(Player p) {
-        getNearbyLivingEntities(p.getLocation(), 8.0).forEach(e -> e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 3 * 20, 2)));
+        getNearbyMobs(p.getLocation(), 8.0).forEach(e -> e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 3 * 20, 2)));
         p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, p.getLocation().add(0, 1, 0), 100, 4, 1, 4, 0.1);
         p.playSound(p.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0f, 1.0f);
         p.sendMessage(Component.text("🔮 Time slows for your foes!", NamedTextColor.LIGHT_PURPLE));
@@ -421,9 +404,38 @@ public class BoundManager {
         Location center = p.getLocation();
         p.playSound(center, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
         p.sendMessage(Component.text("💠 Lightning bends to your will!", NamedTextColor.GOLD));
-        getNearbyLivingEntities(center, 15.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
+        getNearbyEnemies(center, p, 15.0).forEach(e -> e.getWorld().strikeLightning(e.getLocation()));
         getNearbyPlayers(center, 15.0).forEach(player -> player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
         return true;
+    }
+
+    // --- MISC UTILITY METHODS ---
+
+    public void giveBoundItem(Player player, Bound bound) {
+        ItemStack boundItem = new ItemStack(Material.PAPER);
+        ItemMeta meta = boundItem.getItemMeta();
+        meta.displayName(Component.text("Your Bound: ", NamedTextColor.GRAY).append(Component.text(bound.getName(), NamedTextColor.GOLD)));
+        meta.lore(List.of(Component.text("This represents your innate power.", NamedTextColor.DARK_AQUA), Component.text("It cannot be dropped or moved.", NamedTextColor.DARK_GRAY)));
+        int modelData;
+        switch (bound) {
+            case NATURE -> modelData = 1001;
+            case WIND -> modelData = 1002;
+            case STONE -> modelData = 1003;
+            case INFERNO -> modelData = 1004;
+            case THUNDER -> modelData = 1005;
+            case SHADOW -> modelData = 1006;
+            case FROST -> modelData = 1007;
+            case AQUA -> modelData = 1008;
+            case DIVINE -> modelData = 1009;
+            case VOID -> modelData = 1010;
+            case CHRONO -> modelData = 1011;
+            case ADMIN -> modelData = 1012;
+            default -> modelData = 0;
+        }
+        meta.setCustomModelData(modelData);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+        boundItem.setItemMeta(meta);
+        player.getInventory().setItem(8, boundItem);
     }
 
     private Bound getRandomBoundByRarity(Bound.Rarity rarity) {
@@ -444,4 +456,4 @@ public class BoundManager {
             }
         }.runTaskTimer(plugin, 0L, 5 * 20L);
     }
-                                                                                    }
+        }
