@@ -9,7 +9,6 @@ import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -92,8 +91,6 @@ public class BoundManager {
         }
     }
     
-    // --- CORRECTED HELPER METHODS ---
-    
     private List<LivingEntity> getNearbyEnemies(Player caster, double radius) {
         return caster.getNearbyEntities(radius, radius, radius).stream()
                 .filter(e -> e instanceof LivingEntity && !e.equals(caster))
@@ -113,8 +110,6 @@ public class BoundManager {
                 .filter(p -> !p.equals(caster) && p.getLocation().distanceSquared(caster.getLocation()) <= radius * radius)
                 .collect(Collectors.toList());
     }
-
-    // --- ABILITY IMPLEMENTATIONS (Now using correct helpers) ---
 
     private boolean doNaturePrimary(Player p) {
         Block block = p.getLocation().getBlock().getRelative(BlockFace.DOWN);
@@ -446,11 +441,12 @@ public class BoundManager {
             public void run() {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (plugin.getDataManager().getPlayerBound(p) == Bound.CHRONO) {
-                        chronoLocations.put(p.getUniqueI(), p.getLocation());
-                        chronoHealth.put(p.getUniqueI(), p.getHealth());
+                        // THIS IS THE FIXED LINE
+                        chronoLocations.put(p.getUniqueId(), p.getLocation());
+                        chronoHealth.put(p.getUniqueId(), p.getHealth());
                     }
                 }
             }
         }.runTaskTimer(plugin, 0L, 5 * 20L);
     }
-        }
+    }
